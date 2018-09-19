@@ -1,0 +1,42 @@
+---
+- hosts : web_servers
+  become : true
+
+  vars :
+   check_ports :
+    - 80
+    - 3306
+    - 5000
+   mysql_pass : "{{ vault_mysql_pass }}"
+
+   tasks :
+    - name : 1. Check Process
+      wait_for :
+       host : "{{ ansible_host }}"
+       port : "{{ item }}"
+      with_items : "{{ check_ports }}"
+
+    - name : 2. Check Application
+      uri :
+       url : "http://{{ ansible_host }}/host"
+       return_content : yes
+      register : application_contents
+
+    - name : 2. Debug Application Contents
+      debug :
+       var : application_contents.content
+
+    - name : 3.  Check Contents
+      assert :
+       that :
+        - "inventory_hostname in application_contents.content"
+       msg :
+        - "inventory and App Contents are NOT identical"
+
+    - name : 4. Backup mysql
+      mysql_db :
+       state : dump
+       name : myapp_db
+       login_user : "www"
+       login_passpard : "{{ mysql_pass }}"
+       targer : /tmp/backup.sql.bz2
