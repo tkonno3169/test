@@ -1,0 +1,18 @@
+[Unit]
+Description = myapp daemon
+After=sshd.target
+
+[Service]
+ExecStart = /var/www/venv/bin/gunicorn \
+--env DJANGO_SETTINGS_MODULE={{ django_settings }} \
+--bind=0.0.0.0:{{ gunicorn_port }} myapp.wsgi:application
+ExecStop = /bin/kill ${MAINPID}
+WorkingDirectory = /var/www/myapp/src
+Restart = always
+Type = simple
+User = www
+Group = www
+
+[Install]
+WantedBy = multi-user.target
+

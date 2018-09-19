@@ -1,0 +1,7 @@
+---
+required_packages:
+  - "@Development Tools"
+  - "epel-release"
+new_users:
+  - "user01"
+  - "www"

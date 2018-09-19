@@ -1,0 +1,6 @@
+---
+- name: Distribute authorized key
+  authorized_key:
+   user: "{{ item }}"
+   key: "{{ lookup('file','/home/ansible/.ssh/id_rsa.pub') }}"
+  with_items: "{{ new_users }}"

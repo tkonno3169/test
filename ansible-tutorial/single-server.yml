@@ -1,0 +1,13 @@
+---
+- hosts: web_servers
+  become: yes
+
+  roles:
+    - role: common
+      tags: common
+    - role: mariadb
+      tags: mariadb
+    - role: application
+      tags: app
+    - role: nginx
+      tags: nginx

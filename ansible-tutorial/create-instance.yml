@@ -1,0 +1,54 @@
+---
+- name: Create new instance
+  hosts: localhost
+  connection: local
+
+  vars_prompt:
+    - name: "server_name"
+      prompt: "Input Server Name"
+      private: no
+
+  vars:
+    ansible_python_interpreter: "/home/ansible/venv/bin/python"
+
+  tasks:
+    - name: Register Auth Key
+      os_keypair:
+        cloud: mycloud
+        name: "key_{{ server_name }}"
+        public_key_file: /home/ansible/.ssh/id_rsa.pub
+
+    - name: Create Instance
+      os_server:
+        cloud: mycloud
+        name: "{{ server_name }}"
+        image: vmi-zabbix-2.4-centos-7.2-20gb
+        key_name: "key_{{ server_name }}"
+        config_drive: yes
+        flavor: g-512mb
+        security_groups:
+          - default
+          - gncs-ipv4-ssh
+          - gncs-ipv4-web
+        meta:
+          instance_name_tag: "{{ server_name }}"
+      register: instance_info
+
+    - name: Display Instance Info
+      debug:
+        var: "{{ item }}"
+      with_items:
+        - instance_info.openstack.name
+        - instance_info.openstack.accessIPv4
+        - instance_info.openstack.adminPass
+
+    - name: Wait for Booting up
+      wait_for:
+        host: "{{ instance_info.openstack.accessIPv4 }}"
+        port: 22
+
+    - name: Register New Instance to Inventory
+      lineinfile:
+        dest: "{{ inventory_file }}"
+        insertafter: '[web_servers]'
+        line: "{{ server_name }} ansible_host={{ instance_info.openstack.accessIPv4 }} ansible_user=root"

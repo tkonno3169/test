@@ -1,0 +1,7 @@
+---
+- name: Initialize OS setting for Linux Servers
+  hosts: web_servers
+  become: yes
+
+  roles:
+    - role: common

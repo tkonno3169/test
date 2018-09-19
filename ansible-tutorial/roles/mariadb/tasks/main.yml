@@ -1,0 +1,33 @@
+---
+- name: Install MariaDB library
+  yum:
+    name: "{{ item }}"
+  with_items:
+    - mariadb-server
+    - MySQL-python
+
+- name: Create MariaDB config
+  template:
+    src: myapp.cnf.j2
+    dest: /etc/my.cnf.d/myapp.cnf
+  notify:
+    - Restart mariadb
+
+- name: Start MariaDB
+  systemd:
+    name: mariadb
+    state: started
+
+- name: Create database
+  mysql_db:
+    name: myapp_db
+
+- name: Create connection user
+  mysql_user:
+    name: www
+    host: "{{ item }}"
+    password: testpassword
+    priv: myapp_db.*:all
+  with_items:
+    - "%"
+    - "localhost"

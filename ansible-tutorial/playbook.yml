@@ -1,0 +1,11 @@
+---
+- name: Test Playbook
+  hosts: test_servers
+  tasks:
+    - name: Check OS Family
+      debug:
+        var: ansible_os_family
+    
+    - name: Check OS Version
+      command: cat /etc/redhat-release
+      when: ansible_os_family == "RedHat"

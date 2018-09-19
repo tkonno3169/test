@@ -1,0 +1,48 @@
+---
+- name: Install development library
+  yum:
+    name: "{{ item }}"
+  with_items:
+   - mariadb-devel
+   - git
+   - python-virtualenv
+
+- name: Create application directory
+  file:
+    state: directory
+    path: /var/www/
+    owner: www
+    mode: 0755
+
+- block:
+  - name: Deploy application code
+    git:
+      repo: https://github.com/ansibleautomation/myapp.git
+      dest: /var/www/myapp
+
+  - name: Create virtualenv
+    command: virtualenv venv
+    args:
+      chdir: /var/www/
+      creates: /var/www/venv/bin/activate
+
+  - name: Install development library in virtualenv
+    pip:
+      requirements: /var/www/myapp/requirements.txt
+      virtualenv: /var/www/venv/
+
+  become_user: www
+
+- name: Copy boot conf
+  template:
+    src: myapp.service.j2
+    dest: /etc/systemd/system/myapp.service
+  notify:
+    - Restart myapp
+
+- name: Migrate databases
+  django_manage:
+    app_path: /var/www/myapp/src/
+    command: migrate
+    settings: "{{ django_settings }}"
+    virtualenv: /var/www/venv/

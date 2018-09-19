@@ -1,0 +1,10 @@
+upstream app {
+    server 127.0.0.1:{{ gunicorn_port }};
+}
+
+server {
+    listen {{ nginx_port }};
+    location / {
+        proxy_pass http://app;
+    }
+}
